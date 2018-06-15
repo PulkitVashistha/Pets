@@ -39,13 +39,13 @@
     <string name="category_measurement">Measurement</string>
 
     <!-- Text hint for name field in the editor [CHAR LIMIT=30] -->
-    <string name="hint_pet_name">Name</string>
+    <string name="pet_name">Name</string>
 
     <!-- Text hint for breed field in the editor [CHAR LIMIT=30] -->
-    <string name="hint_pet_breed">Breed</string>
+    <string name="pet_breed">Breed</string>
 
     <!-- Text hint for name field in the editor [CHAR LIMIT=30] -->
-    <string name="hint_pet_weight">Weight</string>
+    <string name="pet_weight">Weight</string>
 
     <!-- Units for weight of the pet (kilograms) [CHAR LIMIT=5] -->
     <string name="unit_pet_weight">kg</string>
