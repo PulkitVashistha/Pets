@@ -31,7 +31,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract;
-import com.example.android.pets.data.PetProvider;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -84,7 +83,7 @@ public class EditorActivity extends AppCompatActivity {
         values.put(PetContract.PetEntry.COLOUMN_GENDER, genderInt);
         values.put(PetContract.PetEntry.COLOUMN_WEIGHT,weightInt);
 
-        Uri newUri = getContentResolver().insert(PetContract.PetEntry.CONTENT_URI,values)
+        Uri newUri = getContentResolver().insert(PetContract.PetEntry.CONTENT_URI,values);
 
         if(newUri == null)
             Toast.makeText(this, getString(R.string.editor_insert_pet_failed),

@@ -18,7 +18,6 @@ package com.example.android.pets;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -26,7 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.ListView;
 
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
@@ -53,8 +52,14 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
-        mDbHelper = new PetDbHelper(this);
-        displayDatabaseInfo();
+        // Find the ListView which will be populated with the pet data
+        ListView petListView = (ListView) findViewById(R.id.list);
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        petListView.setEmptyView(emptyView);
+
+        //mDbHelper = new PetDbHelper(this);
+        //displayDatabaseInfo();
 
     }
 
@@ -72,10 +77,6 @@ public class CatalogActivity extends AppCompatActivity {
     private void displayDatabaseInfo() {
         // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
-        PetDbHelper mDbHelper = new PetDbHelper(this);
-
-        // Create and/or open a database to read from it
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         String[] projection ={
                 PetEntry._ID,
@@ -85,14 +86,6 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLOUMN_WEIGHT,
         };
 
-//        Cursor cursor = db.query(
-//                PetEntry.TABLE_NAME,
-//                projection,
-//                null,
-//                null,
-//                null,
-//                null,
-//                null);
         Cursor cursor = getContentResolver().query(
                 PetEntry.CONTENT_URI,
                 projection,
@@ -101,41 +94,13 @@ public class CatalogActivity extends AppCompatActivity {
                 null
         );
 
-        TextView displayView = (TextView) findViewById(R.id.text_view_pet);
+        ListView petListView = (ListView) findViewById(R.id.list);
 
-        try {
+        PetCursorAdapter adapter = new PetCursorAdapter(this, cursor);
 
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount()+"\n\n");
-            displayView.append(PetEntry._ID+"-"+PetEntry.COLOUMN_NAME+"-"+PetEntry.COLOUMN_BREED+"-"+
-                    PetEntry.COLOUMN_GENDER+"-"+PetEntry.COLOUMN_WEIGHT+"\n");
+        petListView.setAdapter(adapter);
 
-            int idColoumnIndex = cursor.getColumnIndex(PetEntry._ID);
-            int nameColoumnIndex = cursor.getColumnIndex(PetEntry.COLOUMN_NAME);
-            int breedColoumnIndex = cursor.getColumnIndex(PetEntry.COLOUMN_BREED);
-            int genderColoumnIndex = cursor.getColumnIndex(PetEntry.COLOUMN_GENDER);
-            int weightColoumnIndex = cursor.getColumnIndex(PetEntry.COLOUMN_WEIGHT);
 
-            while(cursor.moveToNext()){
-                int currentID = cursor.getInt(idColoumnIndex);
-                String currentName = cursor.getString(nameColoumnIndex);
-                String currentBreed = cursor.getString(breedColoumnIndex);
-                String currentGender ;
-                int currentWeight = cursor.getInt(weightColoumnIndex);
-
-                if( cursor.getInt(genderColoumnIndex) == 1)
-                    currentGender = "Male";
-                else if( cursor.getInt(genderColoumnIndex)== 2)
-                    currentGender = "Female";
-                else
-                    currentGender = "Unknown";
-
-                displayView.append(("\n"+currentID+"-"+currentName+"-"+currentBreed
-                        +"-"+currentGender+"-"+currentWeight));
-            }
-
-        } finally {
-            cursor.close();
-        }
     }
 
     private void insertPet(){
