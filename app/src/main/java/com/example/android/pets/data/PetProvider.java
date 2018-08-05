@@ -8,24 +8,29 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
+
 /**
  * {@link ContentProvider} for Pets app.
  */
 public class PetProvider extends ContentProvider {
 
-    /** Tag for the log messages */
+    /**
+     * Tag for the log messages
+     */
     public static final String LOG_TAG = PetProvider.class.getSimpleName();
     private static final int PETS = 100;
     private static final int PET_ID = 101;
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
-    static{
-        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY,PetContract.PATH_PETS,PETS);
-        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY,PetContract.PATH_PETS+"/#",PET_ID);
-        }
+    static {
+        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS, PETS);
+        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS + "/#", PET_ID);
+    }
 
-    /** Database helper object*/
+    /**
+     * Database helper object
+     */
 
     private PetDbHelper mDbHelper;
 
@@ -34,7 +39,7 @@ public class PetProvider extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
-        mDbHelper = new PetDbHelper(getContext()); 
+        mDbHelper = new PetDbHelper(getContext());
         return true;
     }
 
@@ -54,12 +59,12 @@ public class PetProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match) {
             case PETS:
-                cursor = database.query(PetContract.PetEntry.TABLE_NAME , projection , selection, selectionArgs,
-                        null,null,sortOrder);
+                cursor = database.query(PetContract.PetEntry.TABLE_NAME, projection, selection, selectionArgs,
+                        null, null, sortOrder);
                 break;
             case PET_ID:
                 selection = PetContract.PetEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 cursor = database.query(PetContract.PetEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
@@ -67,6 +72,8 @@ public class PetProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
     }
 
@@ -114,8 +121,11 @@ public class PetProvider extends ContentProvider {
             return null;
         }
 
+        getContext().getContentResolver().notifyChange(uri, null);
+
         return ContentUris.withAppendedId(uri, id);
     }
+
     /**
      * Updates the data at the given selection and selection arguments, with the new ContentValues.
      */
@@ -131,7 +141,7 @@ public class PetProvider extends ContentProvider {
                 // so we know which row to update. Selection will be "_id=?" and selection
                 // arguments will be a String array containing the actual ID.
                 selection = PetContract.PetEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return updatePet(uri, contentValues, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
@@ -173,7 +183,13 @@ public class PetProvider extends ContentProvider {
 
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
-        return database.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+        int rowsUpdated = database.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+
+        if (rowsUpdated != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        return rowsUpdated;
     }
 
 
@@ -183,21 +199,31 @@ public class PetProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Get writeable database
+
+        int rowsDeleted;
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PETS:
                 // Delete all rows that match the selection and selection args
-                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                break;
             case PET_ID:
                 // Delete a single row given by the ID in the URI
                 selection = PetContract.PetEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+                break;
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
         }
+
+        if (rowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        // Return the number of rows deleted
+        return rowsDeleted;
     }
 
     @Override
